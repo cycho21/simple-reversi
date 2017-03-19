@@ -4,8 +4,6 @@ package algorithm;
  * Created by chan8 on 2017-03-17.
  */
 public class Point {
-    private boolean canPut;
-    private int direction;
     private int x;
     private int y;
     private int score;
@@ -15,28 +13,12 @@ public class Point {
         this.y = y;
     }
 
-    public int getDirection() {
-        return direction;
-    }
-
-    public void setDirection(int direction) {
-        this.direction = direction;
-    }
-
     public int getScore() {
         return score;
     }
 
     public void setScore(int score) {
         this.score = score;
-    }
-
-    public boolean isCanPut() {
-        return canPut;
-    }
-
-    public void setCanPut(boolean canPut) {
-        this.canPut = canPut;
     }
 
     public int getX() {

@@ -1,7 +1,9 @@
 package algorithm;
 
+import javax.rmi.CORBA.Util;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -10,15 +12,12 @@ import java.util.Queue;
  */
 public class Reversi {
     BufferedWriter bw;      // for Test
-    private static final int GOAL_DEPTH = 13;
-    private static final int MIN_VALUE = Integer.MIN_VALUE / 2;
     private static final int WIDTH = 8;
     private static final int HEIGHT = 8;
-    private static final int WHITE = 1;
-    private static final int BLACK = -1;
     private static final int BLANK_SPACE = 0;
-    private static final int[] dX = {1, -1, 0, 0};
-    private static final int[] dY = {0, 0, -1, 1};
+    private static final int[] dX = {1, -1, 0, 0, 1, -1, 1, -1};
+    private static final int[] dY = {0, 0, -1, 1, 1, 1, -1, -1};
+    private static int GOAL_DEPTH = 6;
 
     private AlphaBetaPruner alphaBetaPruner;
     private boolean print;
@@ -26,12 +25,14 @@ public class Reversi {
     public Reversi() throws IOException {
     }
 
-    public void initialize() {
+    public void initialize(int depth) {
+        this.GOAL_DEPTH = depth;
         this.alphaBetaPruner = new AlphaBetaPruner();
         this.print = false;
     }
 
-    public void initialize(BufferedWriter bw) {
+    public void initialize(int depth, BufferedWriter bw) {
+        this.GOAL_DEPTH = depth;
         this.alphaBetaPruner = new AlphaBetaPruner();
         this.bw = bw;
         this.print = true;
@@ -49,8 +50,9 @@ public class Reversi {
      */
     public Point isPossibleToPut(int turn, int[][] board) {
         Queue<Point> canPutPoints = nextQueue(board, turn);
+        if (canPutPoints.size() == 0)
+            return null;
         Node root = makeTree(canPutPoints, board, turn);
-
         Point maximizedPoint = alphaBetaPruner.getMaximizedPoint(root);
 
 //        Node node = root;
@@ -66,28 +68,13 @@ public class Reversi {
         return maximizedPoint;
     }
 
-    private void printBoard(int[][] board) throws IOException {
-        for (int i = 0; i < HEIGHT; ++i) {
-            for (int j = 0; j < WIDTH; ++j) {
-                if (board[i][j] == BLACK)
-                    bw.write("B ");
-                if (board[i][j] == WHITE)
-                    bw.write("W ");
-                if (board[i][j] == BLANK_SPACE)
-                    bw.write(". ");
-            }
-            bw.write("\n");
-        }
-        bw.write("\n");
-        bw.flush();
-    }
 
     private Queue<Point> nextQueue(int[][] board, int turn) {
         Queue<Point> canPutPoints = new LinkedList<Point>();
 
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
-                if (board[i][j] != BLANK_SPACE)
+                if (board[j][i] != BLANK_SPACE)
                     continue;
                 if (canPut(i, j, board, turn) == true) {
                     Point point = new Point(i, j);
@@ -101,7 +88,7 @@ public class Reversi {
     }
 
     private boolean canPut(int x, int y, int[][] board, int turn) {
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 8; ++i) {
             int nx = x + dX[i];
             int ny = y + dY[i];
             if (isInsideBoard(nx, ny) == true) {
@@ -110,10 +97,15 @@ public class Reversi {
                         nx += dX[i];
                         ny += dY[i];
                         if (isInsideBoard(nx, ny) == true) {
-                            if (board[ny][nx] == turn)
+                            if (board[ny][nx] == turn) {
                                 return true;
+                            } else if (board[ny][nx] == (-1 * turn)){
+                                continue;
+                            } else {
+                                break;
+                            }
                         } else {
-                            return false;
+                            break;
                         }
                     }
                 }
@@ -154,6 +146,7 @@ public class Reversi {
                             endY += dY[i];
                             idx++;
                         } else {
+                            change = false;
                             break;
                         }
                     }
@@ -170,13 +163,13 @@ public class Reversi {
         return score;
     }
 
-    private int[][] putDisks(int[][] board, Point next, int turn) {
+    public int[][] putDisks(int[][] board, Point next, int turn) {
         int score = 0;
         int x = next.getX();
         int y = next.getY();
         board[y][x] = turn;
-
-        for (int i = 0; i < 4; ++i) {
+        Queue<Point> putQueue = new LinkedList<Point>();
+        for (int i = 0; i < 8; ++i) {
             int nx = x + dX[i];
             int ny = y + dY[i];
             if (isInsideBoard(nx, ny)) {
@@ -198,13 +191,14 @@ public class Reversi {
                             endY += dY[i];
                             idx++;
                         } else {
+                            change = false;
                             break;
                         }
                     }
 
                     if (change == true) {
                         for (int j = 0; j < idx; ++j) {
-                            board[ny][nx] = turn;
+                            putQueue.add(new Point(nx, ny));
                             nx += dX[i];
                             ny += dY[i];
                         }
@@ -212,25 +206,22 @@ public class Reversi {
                 }
             }
         }
-        return board;
-    }
 
-    private int[][] deepCopyBoard(int[][] board) {
-        int[][] copiedBoard = new int[HEIGHT][WIDTH];
-        for (int i = 0; i < HEIGHT; ++i)
-            for (int j = 0; j < WIDTH; ++j)
-                copiedBoard[j][i] = board[j][i];
-        return copiedBoard;
+        while (!putQueue.isEmpty()) {
+            Point head = putQueue.poll();
+            board[head.getY()][head.getX()] = turn;
+        }
+        return board;
     }
 
     private Node makeTree(Queue<Point> queue, int[][] board, int turn) {
         Node rootNode = new Node();
         while (!queue.isEmpty())
             rootNode.getChildren().add(new Node(queue.poll()));
-
         recursiveAddChildren(rootNode, 0, board, turn);
         return rootNode;
     }
+
 
     private void recursiveAddChildren(Node parent, int depth, int[][] board, int turn) {
         if (depth >= GOAL_DEPTH)
@@ -238,7 +229,7 @@ public class Reversi {
 
         if (print == true) {
             try {
-                printBoard(board);
+                Utils.printBoard(board, bw);
                 if (parent.getValue() != null)
                     bw.write("\n ============ " + parent.getValue().getScore() + " ============ \n");
                 bw.flush();
@@ -250,7 +241,7 @@ public class Reversi {
         for (int i = 0; i < parent.getChildren().size(); ++i) {
             Node children = parent.getChildren().get(i);
             Point next = children.getValue();
-            int[][] copiedBoard = deepCopyBoard(board);
+            int[][] copiedBoard = Utils.deepCopyBoard(board);
 
             putDisks(copiedBoard, next, turn);      // Put disk and get changed board
             Queue<Point> queue = nextQueue(copiedBoard, turn * -1);     // Which point can opponent put in changed board

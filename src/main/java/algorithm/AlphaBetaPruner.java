@@ -1,6 +1,8 @@
 package algorithm;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Queue;
 
 /**
  * Created by chan8 on 2017-03-17.
@@ -8,9 +10,12 @@ import java.util.ArrayList;
 public class AlphaBetaPruner {
 
     private static final int MAX_VALUE = Integer.MAX_VALUE / 2;
+    private static final int MIN_VALUE = Integer.MIN_VALUE / 2;
 
     public Point getMaximizedPoint(Node root) {
-        Pair result = getMaxByAlphaBeta(root, MAX_VALUE, MAX_VALUE, true);
+
+        Pair result = getMaxByAlphaBeta(root, MIN_VALUE, MAX_VALUE, true);
+
         return result.getPoint();
     }
 
@@ -44,6 +49,8 @@ public class AlphaBetaPruner {
         }
         return new Pair(bestChildren, bestValue);
     }
+
+
 }
 
 class Pair {

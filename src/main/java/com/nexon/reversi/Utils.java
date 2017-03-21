@@ -60,19 +60,19 @@ public class Utils {
      */
     public static void printBoardByStringBuilder(int[][] board) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append("   ");
+        sb.append(String.format("%2s", " "));
         for (int i = 0; i < WIDTH; ++i)
-            sb.append((char) ('A' + i) + " ");
+            sb.append(String.format("%3s", (char) ('A' + i)));
         sb.append("\n");
         for (int i = 0; i < HEIGHT; ++i) {
             sb.append((i + 1) + " ");
             for (int j = 0; j < WIDTH; ++j) {
                 if (board[i][j] == BLACK)
-                    sb.append((char) '\u25CF');
+                    sb.append(String.format("%3s", (char) '\u25CF'));
                 if (board[i][j] == WHITE)
-                    sb.append((char) '\u25CB');
+                    sb.append(String.format("%3s", (char) '\u25CB'));
                 if (board[i][j] == BLANK_SPACE)
-                    sb.append("  ");
+                    sb.append(String.format("%3s", " "));
             }
             sb.append("\n");
         }

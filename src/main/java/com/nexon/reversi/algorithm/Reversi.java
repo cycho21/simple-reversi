@@ -36,8 +36,8 @@ public class Reversi {
         this.hasCornerPosition = false;
         regionScore = new int[HEIGHT][WIDTH];
         for (int i = 0; i < HEIGHT; ++i) {
-            if (HEIGHT - i == 1 || HEIGHT - i == 8) {
-                regionScore[i] = new int[]{10000, 5000, 2500, 2500, 2500, 2500, 2500, 2500, 5000, 10000}; // first, last line
+            if (HEIGHT - i == 1 || HEIGHT - i == HEIGHT) {
+                regionScore[i] = new int[]{15000, 5000, 2500, 2500, 2500, 2500, 2500, 2500, 5000, 15000}; // first, last line
                 continue;
             }
             if (HEIGHT - i == 2 || HEIGHT - i == 7) {
@@ -175,10 +175,6 @@ public class Reversi {
         return score;
     }
 
-    private boolean isBoundary(int x, int y) {
-        return ((x == 0 || y == 0 || x == WIDTH - 1 || y == HEIGHT - 1)) ? true : false;
-    }
-
     /**
      * @param board Current state of board. Two dimensional array. Width 8, Height 8.
      *              Black space 0, Black -1, White 1
@@ -242,11 +238,6 @@ public class Reversi {
             rootNode.getChildren().add(new Node(queue.poll()));
         recursiveAddChildren(rootNode, 0, board, turn);
         return rootNode;
-    }
-
-    private boolean isCorner(int x, int y) {
-        return ((x == WIDTH && y == HEIGHT - 1) || (x == 0 && y == HEIGHT - 1) ||
-                (x == WIDTH && y == 0) || (x == 0 && y == 0)) ? true : false;
     }
 
     private void recursiveAddChildren(Node parent, int depth, int[][] board, int turn) {

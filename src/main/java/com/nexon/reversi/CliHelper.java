@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import static sun.audio.AudioPlayer.player;
+
 /**
  * Created by chan8 on 2017-03-17.
  */
@@ -20,18 +22,30 @@ public class CliHelper {
     private int black;
 
     /**
-     * 
      * @param args -d depth of minimax algorithm
+     *             -t turn of player. -1 is Black, 1 is White. Default value is black.
      */
     public static void main(String... args) {
         int depth = 4;
-        
+        int turn = BLACK;
         if (args.length >= 2) {
             int idx = 0;
 
             switch (args[idx]) {
                 case "-d":
                     depth = Integer.parseInt(args[idx++], 10);
+                    break;
+                case "-t":
+                    turn = Integer.parseInt(args[idx++], 10);
+                    switch (turn) {
+                        case BLACK:
+                            break;
+                        case WHITE:
+                            break;
+                        default:
+                            turn = BLACK;
+                            break;
+                    }
                     break;
                 default:
                     break;
@@ -40,26 +54,34 @@ public class CliHelper {
         }
 
         CliHelper helper = new CliHelper();
-        helper.startGame(depth);
+        helper.startGame(depth, turn);
     }
 
-    private void startGame(int depth) {
+    private void startGame(int depth, int inputTurn) {
         Reversi ai = null;
         try {
             ai = new Reversi();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    
+
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         int[][] board = new int[8][8];
+        
+//        for (int i = 0; i < WIDTH; ++i) {
+//            board[0][i] = WHITE;
+//        }
         board[3][3] = WHITE;
         board[3][4] = BLACK;
         board[4][3] = BLACK;
         board[4][4] = WHITE;
 
-        int turn = BLACK;
+        final int PLAYER = inputTurn;
+        final int COMPUTER = inputTurn * -1;
+
+
+        int turn = inputTurn;
         int passCount = 0;
         ai.initialize(depth);
 
@@ -68,17 +90,22 @@ public class CliHelper {
             try {
                 Utils.printBoardByStringBuilder(board);     // Print board's current situation
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("printBoardByStringBuilder() occurs error. ");
             }
 
             String line = "";
-            if (turn == BLACK) {
+
+            if (turn == PLAYER) {
                 System.out.println("Player's turn");
                 Answer answer = ai.isPossibleToPut(turn, board);
                 if (answer.isCanPlay() == false) {
-                    System.out.println("Passed!");
-                    passCount++;
-                    turn *= -1;
+                    if (passCount >= 1) {
+                        printGameResult(board);
+                        break;
+                    } else {
+                        System.out.println("Turn passed..");
+                        passCount++;
+                    }
                     continue;
                 } else {
                     passCount = 0;
@@ -110,16 +137,29 @@ public class CliHelper {
                 ai.putDisks(board, point, turn);
 
                 turn *= -1;
+
             } else {
-                System.out.println("AI's turn");
+
+                System.out.println("Computer's turn");
                 Answer answer = ai.isPossibleToPut(turn, board);
 
                 if (answer.isCanPlay() == false) {
+                    if (passCount >= 1) {
+                        printGameResult(board);
+                        break;
+                    } else {
+                        System.out.println("Turn passed..");
+                        passCount++;
+                    }
+
                     if (countPoint(board) == 64) {
-                        if (white < black)
-                            System.out.println("BLACK WIN :: WHITE : " + white + " : BLACK : " + black);
+                        if (white < black) {
+                            System.out.print(PLAYER == white ? "Computer Win :: " : "Player Win :: ");
+                            System.out.println("WHITE : " + white + " : BLACK : " + black);
+                        }
                         if (black < white)
-                            System.out.println("WHITE WIN :: WHITE : " + white + " : BLACK : " + black);
+                            System.out.print(PLAYER == black ? "Computer Win :: " : "Player Win :: ");
+                        System.out.println("WHITE : " + white + " : BLACK : " + black);
                         if (black == white)
                             System.out.println("DRAW!");
                         break;
@@ -128,13 +168,6 @@ public class CliHelper {
                         black = 0;
                     }
 
-                    if (passCount == 1) {
-                        System.out.println("GAME IS END!");
-                        break;
-                    } else {
-                        System.out.println("TURN PASSED..");
-                        passCount++;
-                    }
                 } else {
                     Point maximizedPoint = answer.getMaximizedPoint();
                     board = ai.putDisks(board, maximizedPoint, turn);
@@ -143,6 +176,16 @@ public class CliHelper {
                 turn *= -1;
             }
         }
+    }
+
+    private void printGameResult(int[][] board) {
+        countPoint(board);
+        if (white < black)
+            System.out.println("BLACK WIN :: WHITE : " + white + " : BLACK : " + black);
+        if (black < white)
+            System.out.println("WHITE WIN :: WHITE : " + white + " : BLACK : " + black);
+        if (black == white)
+            System.out.println("DRAW!");
     }
 
     private int countPoint(int[][] board) {

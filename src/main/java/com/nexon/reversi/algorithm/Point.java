@@ -1,4 +1,4 @@
-package algorithm;
+package com.nexon.reversi.algorithm;
 
 /**
  * Created by chan8 on 2017-03-17.

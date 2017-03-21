@@ -1,31 +1,30 @@
-import algorithm.Point;
-import algorithm.Reversi;
-import algorithm.Utils;
+import com.nexon.reversi.Answer;
+import com.nexon.reversi.algorithm.Point;
+import com.nexon.reversi.algorithm.Reversi;
+import com.nexon.reversi.Utils;
 import org.junit.Test;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 
 /**
  * Created by chan8 on 2017-03-17.
  */
 public class ReversiTest {
-    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+    //    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
     private static final int WIDTH = 8;
     private static final int HEIGHT = 8;
     private static final int WHITE = 1;
     private static final int BLACK = -1;
-    private static final int[] dX = {1, -1, 0, 0};
-    private static final int[] dY = {0, 0, -1, 1};
     private int white;
     private int black;
 
     @Test
     public void testIsPossibleToPut() {
-        Reversi reversi = null;
+        Reversi whiteAI = null;
+        Reversi blackAI = null;
         try {
-            reversi = new Reversi();
+            whiteAI = new Reversi();
+            blackAI = new Reversi();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,18 +41,25 @@ public class ReversiTest {
 //        testData[3][0] = BLACK;
 //        testData[3][3] = BLANK_SPACE;
 
-
         int turn = BLACK;
 
-        reversi.initialize(6);
+        blackAI.initialize(10);
+        whiteAI.initialize(4);
         int passCount = 0;
         white = 0;
         black = 0;
+
         while (true) {
             long startTime = System.currentTimeMillis();
-            Point maximizedPoint = reversi.isPossibleToPut(turn, testData);
+            Answer answer = null;
+            if (turn == black)
+                answer = blackAI.isPossibleToPut(turn, testData);
+            else
+                answer = whiteAI.isPossibleToPut(turn, testData);
+
             long endTime = System.currentTimeMillis();
-            if (maximizedPoint == null) {
+
+            if (answer.isCanPlay() == false) {
                 if (countPoint(testData) == 64) {
                     if (white < black)
                         System.out.println("BLACK WIN :: WHITE : " + white + " : BLACK : " + black);
@@ -72,17 +78,18 @@ public class ReversiTest {
                     passCount++;
                 }
             }
+
+            Point maximizedPoint = answer.getMaximizedPoint();
             System.out.println(maximizedPoint.toString());
-            testData = reversi.putDisks(testData, maximizedPoint, turn);
+            testData = blackAI.putDisks(testData, maximizedPoint, turn);
             passCount = 0;
             System.out.println((double) (endTime - startTime) / 1000 + " secs");
 
-//            try {
-//                Utils.printBoard(testData, bw);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            
+            try {
+                Utils.printBoard(testData, new BufferedWriter(new OutputStreamWriter(System.out)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             turn *= -1;
         }
     }

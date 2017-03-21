@@ -1,76 +1,80 @@
-package algorithm;
+package com.nexon.reversi.algorithm;
 
-import javax.rmi.CORBA.Util;
-import java.io.BufferedWriter;
+import com.nexon.reversi.Answer;
+import com.nexon.reversi.Utils;
+
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 
 /**
  * Created by chan8 on 2017-03-17.
  */
 public class Reversi {
-    BufferedWriter bw;      // for Test
     private static final int WIDTH = 8;
     private static final int HEIGHT = 8;
     private static final int BLANK_SPACE = 0;
     private static final int[] dX = {1, -1, 0, 0, 1, -1, 1, -1};
     private static final int[] dY = {0, 0, -1, 1, 1, 1, -1, -1};
-    private static int GOAL_DEPTH = 6;
+    private int GOAL_DEPTH = 6;
+    private int[][] regionScore;
 
     private AlphaBetaPruner alphaBetaPruner;
-    private boolean print;
+    private boolean hasCornerPosition;
 
     public Reversi() throws IOException {
     }
 
+    /**
+     * @param depth MinMax algorithm depth. Depth be deeper, return time longer
+     */
     public void initialize(int depth) {
         this.GOAL_DEPTH = depth;
         this.alphaBetaPruner = new AlphaBetaPruner();
-        this.print = false;
+        this.hasCornerPosition = false;
+        regionScore = new int[HEIGHT][WIDTH];
+        for (int i = 0; i < HEIGHT; ++i) {
+            if (HEIGHT - i == 1 || HEIGHT - i == 8) {
+                regionScore[i] = new int[]{10000, 5000, 2500, 2500, 2500, 2500, 2500, 2500, 5000, 10000}; // first, last line
+                continue;
+            }
+            if (HEIGHT - i == 2 || HEIGHT - i == 7) {
+                regionScore[i] = new int[]{5000, 5000, 1000, 1000, 1000, 1000, 5000, 5000}; // second, and second from last line
+                continue;
+            }
+            regionScore[i] = new int[]{1000, 500, 100, 100, 100, 100, 500, 1000}; // other lines
+        }
     }
 
-    public void initialize(int depth, BufferedWriter bw) {
-        this.GOAL_DEPTH = depth;
-        this.alphaBetaPruner = new AlphaBetaPruner();
-        this.bw = bw;
-        this.print = true;
-    }
-
-    /*
-   (0, 0) -> x x x x x x x x
-             x x x x x x x x
-             x x x x x x x x
-             x x x x x x x x
-             x x x x x x x x
-             x x x x x x x x
-             x x x x x x x x
-   (7, 0) -> x x x x x x x x <- (7, 7)
+    /**
+     * @param turn  Black or white. -1 is Black 1 is White.
+     * @param board Current state of board. Two dimensional array. Width 8, Height 8.
+     *              Black space 0, Black -1, White 1
+     * @return Answer that has Maximized point(Point) and playable turn or not(boolean)
      */
-    public Point isPossibleToPut(int turn, int[][] board) {
-        Queue<Point> canPutPoints = nextQueue(board, turn);
+    public Answer isPossibleToPut(int turn, int[][] board) {
+        PriorityQueue<Point> canPutPoints = nextQueue(board, turn);
+
+        Answer answer = new Answer();
+
         if (canPutPoints.size() == 0)
-            return null;
+            return answer;
         Node root = makeTree(canPutPoints, board, turn);
         Point maximizedPoint = alphaBetaPruner.getMaximizedPoint(root);
 
-//        Node node = root;
-//        int depth = 1;
-//        while (true) {
-//            if (node.getChildren().size() == 0)
-//                break;
-//            node = node.getChildren().get(0);
-//            System.out.println(depth);
-//            depth++;
-//        }
-
-        return maximizedPoint;
+        answer.setCanPlay(true);
+        answer.setMaximizedPoint(maximizedPoint);
+        return answer;
     }
 
-
-    private Queue<Point> nextQueue(int[][] board, int turn) {
-        Queue<Point> canPutPoints = new LinkedList<Point>();
+    private PriorityQueue<Point> nextQueue(int[][] board, int turn) {
+        PriorityQueue<Point> canPutPoints = new PriorityQueue<Point>(new Comparator<Point>() {
+            public int compare(Point o1, Point o2) {
+                return o1.getScore() < o2.getScore() ? -1 : 1;
+            }
+        });
 
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
@@ -87,7 +91,15 @@ public class Reversi {
         return canPutPoints;
     }
 
-    private boolean canPut(int x, int y, int[][] board, int turn) {
+    /**
+     * @param x     x-position
+     * @param y     y-position
+     * @param board Current state of board. Two dimensional array. Width 8, Height 8.
+     *              Black space 0, Black -1, White 1
+     * @param turn  Black or white. -1 is Black 1 is White.
+     * @return can put disk this turn or not
+     */
+    public boolean canPut(int x, int y, int[][] board, int turn) {
         for (int i = 0; i < 8; ++i) {
             int nx = x + dX[i];
             int ny = y + dY[i];
@@ -99,7 +111,7 @@ public class Reversi {
                         if (isInsideBoard(nx, ny) == true) {
                             if (board[ny][nx] == turn) {
                                 return true;
-                            } else if (board[ny][nx] == (-1 * turn)){
+                            } else if (board[ny][nx] == (-1 * turn)) {
                                 continue;
                             } else {
                                 break;
@@ -152,7 +164,7 @@ public class Reversi {
                     }
                     if (change == true) {
                         for (int j = 0; j < idx; ++j) {
-                            score++;
+                            score += regionScore[ny][nx];
                             nx += dX[i];
                             ny += dY[i];
                         }
@@ -163,8 +175,18 @@ public class Reversi {
         return score;
     }
 
+    private boolean isBoundary(int x, int y) {
+        return ((x == 0 || y == 0 || x == WIDTH - 1 || y == HEIGHT - 1)) ? true : false;
+    }
+
+    /**
+     * @param board Current state of board. Two dimensional array. Width 8, Height 8.
+     *              Black space 0, Black -1, White 1
+     * @param next  Post that will place on board
+     * @param turn  Black or white. -1 is Black 1 is White.
+     * @return Deepcopied and placed next disk board
+     */
     public int[][] putDisks(int[][] board, Point next, int turn) {
-        int score = 0;
         int x = next.getX();
         int y = next.getY();
         board[y][x] = turn;
@@ -222,21 +244,14 @@ public class Reversi {
         return rootNode;
     }
 
+    private boolean isCorner(int x, int y) {
+        return ((x == WIDTH && y == HEIGHT - 1) || (x == 0 && y == HEIGHT - 1) ||
+                (x == WIDTH && y == 0) || (x == 0 && y == 0)) ? true : false;
+    }
 
     private void recursiveAddChildren(Node parent, int depth, int[][] board, int turn) {
         if (depth >= GOAL_DEPTH)
             return;
-
-        if (print == true) {
-            try {
-                Utils.printBoard(board, bw);
-                if (parent.getValue() != null)
-                    bw.write("\n ============ " + parent.getValue().getScore() + " ============ \n");
-                bw.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
 
         for (int i = 0; i < parent.getChildren().size(); ++i) {
             Node children = parent.getChildren().get(i);

@@ -1,4 +1,4 @@
-package algorithm;
+package com.nexon.reversi.algorithm;
 
 import java.util.ArrayList;
 

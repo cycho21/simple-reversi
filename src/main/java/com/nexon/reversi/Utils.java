@@ -1,22 +1,28 @@
 package com.nexon.reversi;
 
+import com.nexon.reversi.conf.Configuration;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 
 /**
  * Created by chanyeon on 2017-03-19.
  */
 public class Utils {
-    private static final int WIDTH = 8;
-    private static final int HEIGHT = 8;
-    private static final int WHITE = 1;
-    private static final int BLACK = -1;
-    private static final int BLANK_SPACE = 0;
-
+    private static final int WIDTH = Configuration.getConfiguration().getWIDTH();
+    private static final int HEIGHT = Configuration.getConfiguration().getHEIGHT();
+    private static final int WHITE = Configuration.WHITE;
+    private static final int BLACK = Configuration.BLACK;
+    private static final int BLANK_SPACE = Configuration.BLANK_SPACE;
+    
     /**
      * 
      * @param board Current board
-     * @return      Deepcopied board
+     * @return      Deep copied board
      */
     public static int[][] deepCopyBoard(int[][] board) {
         int[][] copiedBoard = new int[HEIGHT][WIDTH];
@@ -60,23 +66,43 @@ public class Utils {
      */
     public static void printBoardByStringBuilder(int[][] board) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%2s", " "));
+        sb.append(String.format("%1s", " "));
         for (int i = 0; i < WIDTH; ++i)
-            sb.append(String.format("%3s", (char) ('A' + i)));
+            sb.append(String.format("%2s", (char) ('A' + i)));
         sb.append("\n");
         for (int i = 0; i < HEIGHT; ++i) {
-            sb.append((i + 1) + " ");
+            sb.append(String.format("%2s", (i + 1) + " "));
             for (int j = 0; j < WIDTH; ++j) {
                 if (board[i][j] == BLACK)
-                    sb.append(String.format("%3s", (char) '\u25CF'));
+                    sb.append(String.format("%1s", (char) '\u25CF'));
                 if (board[i][j] == WHITE)
-                    sb.append(String.format("%3s", (char) '\u25CB'));
+                    sb.append(String.format("%1s", (char) '\u25CB'));
                 if (board[i][j] == BLANK_SPACE)
-                    sb.append(String.format("%3s", " "));
+                    sb.append(String.format("%2s", " "));
             }
             sb.append("\n");
         }
         sb.append("\n");
         System.out.println(sb.toString());
+    }
+    
+    /**
+     * 
+     * @param filePath relative path of config.json
+     * @return  Parsed config.json
+     */
+    public static JSONObject parseConfiguration(String filePath) {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = (JSONObject) jsonParser.parse(new FileReader(System.getProperty("user.dir") + "/config.json"));
+        } catch (IOException e) {
+            System.out.println("Check config.json file in right place");
+            return null;
+        } catch (ParseException e) {
+            System.out.println("Parse exception from parsing config.json");
+            return null;
+        }
+        return jsonObject;
     }
 }

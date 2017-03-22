@@ -2,6 +2,7 @@ package com.nexon.reversi.algorithm;
 
 import com.nexon.reversi.Answer;
 import com.nexon.reversi.Utils;
+import com.nexon.reversi.conf.Configuration;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -13,9 +14,9 @@ import java.util.Queue;
  * Created by chan8 on 2017-03-17.
  */
 public class Reversi {
-    private static final int WIDTH = 8;
-    private static final int HEIGHT = 8;
-    private static final int BLANK_SPACE = 0;
+    private static int WIDTH;
+    private static int HEIGHT;
+    private static int BLANK_SPACE;
     private static final int[] dX = {1, -1, 0, 0, 1, -1, 1, -1};
     private static final int[] dY = {0, 0, -1, 1, 1, 1, -1, -1};
     private int GOAL_DEPTH = 6;
@@ -25,6 +26,12 @@ public class Reversi {
     private boolean hasCornerPosition;
 
     public Reversi() throws IOException {
+    }
+    
+    static {
+        WIDTH = Configuration.getConfiguration().getWIDTH();
+        HEIGHT = Configuration.getConfiguration().getHEIGHT();
+        BLANK_SPACE = Configuration.BLANK_SPACE;
     }
 
     /**
@@ -259,4 +266,3 @@ public class Reversi {
         }
     }
 }
-

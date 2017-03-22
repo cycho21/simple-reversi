@@ -2,22 +2,18 @@ package com.nexon.reversi;
 
 import com.nexon.reversi.algorithm.Point;
 import com.nexon.reversi.algorithm.Reversi;
+import com.nexon.reversi.conf.Configuration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import static sun.audio.AudioPlayer.player;
+import static com.nexon.reversi.conf.Configuration.*;
 
 /**
  * Created by chan8 on 2017-03-17.
  */
 public class CliHelper {
-    private static final int BLANK_SPACE = 0;
-    private static final int WIDTH = 8;
-    private static final int HEIGHT = 8;
-    private static final int WHITE = 1;
-    private static final int BLACK = -1;
     private int white;
     private int black;
 
@@ -28,15 +24,14 @@ public class CliHelper {
     public static void main(String... args) {
         int depth = 4;
         int turn = BLACK;
-        if (args.length >= 2) {
-            int idx = 0;
-
+        int idx = 0;
+        while (idx < args.length) {
             switch (args[idx]) {
                 case "-d":
-                    depth = Integer.parseInt(args[idx++], 10);
+                    depth = Integer.parseInt(args[++idx], 10);
                     break;
                 case "-t":
-                    turn = Integer.parseInt(args[idx++], 10);
+                    turn = Integer.parseInt(args[++idx], 10);
                     switch (turn) {
                         case BLACK:
                             break;
@@ -50,7 +45,7 @@ public class CliHelper {
                 default:
                     break;
             }
-            idx += 2;
+            idx++;
         }
 
         CliHelper helper = new CliHelper();
@@ -68,20 +63,17 @@ public class CliHelper {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         int[][] board = new int[8][8];
-        
-//        for (int i = 0; i < WIDTH; ++i) {
-//            board[0][i] = WHITE;
-//        }
+
+        /*
+            Initial condition of board
+         */
         board[3][3] = WHITE;
         board[3][4] = BLACK;
         board[4][3] = BLACK;
         board[4][4] = WHITE;
 
         final int PLAYER = inputTurn;
-        final int COMPUTER = inputTurn * -1;
-
-
-        int turn = inputTurn;
+        int turn = BLACK;
         int passCount = 0;
         ai.initialize(depth);
 
@@ -114,7 +106,7 @@ public class CliHelper {
                 try {
                     line = br.readLine().toUpperCase();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Buffered reader read line occur IOException");
                 }
 
                 if (line.length() < 2)
@@ -190,8 +182,8 @@ public class CliHelper {
 
     private int countPoint(int[][] board) {
         int total = 0;
-        for (int i = 0; i < WIDTH; ++i) {
-            for (int j = 0; j < HEIGHT; ++j) {
+        for (int i = 0; i < Configuration.getConfiguration().getWIDTH(); ++i) {
+            for (int j = 0; j < Configuration.getConfiguration().getHEIGHT(); ++j) {
                 if (board[j][i] == WHITE) {
                     white++;
                     total++;

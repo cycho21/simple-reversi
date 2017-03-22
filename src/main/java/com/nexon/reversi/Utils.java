@@ -13,16 +13,23 @@ import java.io.IOException;
  * Created by chanyeon on 2017-03-19.
  */
 public class Utils {
-    private static final int WIDTH = Configuration.getConfiguration().getWIDTH();
-    private static final int HEIGHT = Configuration.getConfiguration().getHEIGHT();
-    private static final int WHITE = Configuration.WHITE;
-    private static final int BLACK = Configuration.BLACK;
-    private static final int BLANK_SPACE = Configuration.BLANK_SPACE;
-    
+    private static int WIDTH;
+    private static int HEIGHT;
+    private static int WHITE;
+    private static int BLACK;
+    private static int BLANK_SPACE;
+
+    static {
+        WIDTH = Configuration.getConfiguration().getWIDTH();
+        HEIGHT = Configuration.getConfiguration().getHEIGHT();
+        WHITE = Configuration.WHITE;
+        BLACK = Configuration.BLACK;
+        BLANK_SPACE = Configuration.BLANK_SPACE;
+    }
+
     /**
-     * 
      * @param board Current board
-     * @return      Deep copied board
+     * @return Deep copied board
      */
     public static int[][] deepCopyBoard(int[][] board) {
         int[][] copiedBoard = new int[HEIGHT][WIDTH];
@@ -33,7 +40,6 @@ public class Utils {
     }
 
     /**
-     * 
      * @param board Game board to printed
      * @param bw    BufferedWriter
      * @throws IOException
@@ -60,13 +66,12 @@ public class Utils {
     }
 
     /**
-     * 
      * @param board Game board to printed
      * @throws IOException
      */
     public static void printBoardByStringBuilder(int[][] board) throws IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%1s", " "));
+        sb.append(String.format("%1s", "  "));
         for (int i = 0; i < WIDTH; ++i)
             sb.append(String.format("%2s", (char) ('A' + i)));
         sb.append("\n");
@@ -85,11 +90,10 @@ public class Utils {
         sb.append("\n");
         System.out.println(sb.toString());
     }
-    
+
     /**
-     * 
      * @param filePath relative path of config.json
-     * @return  Parsed config.json
+     * @return Parsed config.json
      */
     public static JSONObject parseConfiguration(String filePath) {
         JSONParser jsonParser = new JSONParser();

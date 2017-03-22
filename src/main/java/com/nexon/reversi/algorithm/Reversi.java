@@ -27,7 +27,7 @@ public class Reversi {
 
     public Reversi() throws IOException {
     }
-    
+
     static {
         WIDTH = Configuration.getConfiguration().getWIDTH();
         HEIGHT = Configuration.getConfiguration().getHEIGHT();
